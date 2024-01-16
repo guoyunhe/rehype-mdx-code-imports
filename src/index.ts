@@ -44,6 +44,34 @@ function getOpeningAttributes(program: Program): JSXAttributes {
   return openingElement.attributes;
 }
 
+function getImportedNamesFromProgram(
+  program: Program,
+  removeList?: string[],
+): string[] {
+  const names = new Set<string>();
+  program.body.forEach((declaration) => {
+    if (declaration.type === 'ImportDeclaration') {
+      declaration.specifiers = declaration.specifiers.filter((specifier) => {
+        if (specifier.local.name) {
+          names.add(specifier.local.name);
+        }
+        return !removeList?.includes(specifier.local.name);
+      });
+    }
+  });
+  return Array.from(names);
+}
+
+function getImportedNamesFromRoot(root: Root): string[] {
+  let names: string[] = [];
+  root.children.forEach((child) => {
+    if (child.type === 'mdxjsEsm' && child.data?.estree) {
+      names = [...names, ...getImportedNamesFromProgram(child.data?.estree)];
+    }
+  });
+  return Array.from(new Set(names));
+}
+
 /**
  * Convert code meta to JSX elements.
  *
@@ -130,26 +158,23 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
               sourceType: 'module',
             });
 
-            const importsMembers = new Set<string>();
+            const existingMembers = getImportedNamesFromRoot(ast);
+            const importsMembers = getImportedNamesFromProgram(
+              importsAst as Program,
+              existingMembers,
+            );
 
-            importsAst.body.forEach((declaration) => {
-              if (declaration.type === 'ImportDeclaration') {
-                declaration.specifiers.forEach((specifier) => {
-                  if (specifier.local.name) {
-                    importsMembers.add(specifier.local.name);
-                  }
-                });
-              }
-            });
+            // remove duplicated members that is already in root ast
 
             getOpeningAttributes(estree).push(
               ...parseMeta(
                 `imports={{ ${Array.from(importsMembers).sort().join(', ')} }}`,
               ),
             );
+
             ast.children.unshift({
               type: 'mdxjsEsm',
-              value: importsStr,
+              value: '',
               data: {
                 estree: importsAst as any,
               },
