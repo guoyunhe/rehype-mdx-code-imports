@@ -97,10 +97,9 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
       const className =
         node.properties?.className && Array.isArray(node.properties.className)
           ? node.properties?.className.find(
-              (cls) => typeof cls === 'string' && cls.startsWith('language'),
+              (cls) => typeof cls === 'string' && cls.startsWith('language-'),
             )
           : node.properties?.className;
-      console.log('className', className);
 
       // only process jsx and tsx code blocks
       if (className === 'language-jsx' || className === 'language-tsx') {
