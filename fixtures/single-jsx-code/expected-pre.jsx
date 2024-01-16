@@ -15,9 +15,6 @@ function _createMdxContent(props) {
             Button,
             Foobar,
           }}
-          style={{
-            background: 'white',
-          }}
         >
           <_components.code className="language-jsx">
             {

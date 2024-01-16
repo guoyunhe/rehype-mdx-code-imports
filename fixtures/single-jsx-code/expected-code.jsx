@@ -16,9 +16,6 @@ function _createMdxContent(props) {
             Button,
             Foobar,
           }}
-          style={{
-            background: 'white',
-          }}
         >
           {
             "import Foobar from '@foo/bar';\nimport { Button } from 'antd';\n\nrender(<Button>Click me!</Button>);\n"

@@ -164,6 +164,8 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
               existingMembers,
             );
 
+            console.log(importsStr);
+
             // remove duplicated members that is already in root ast
 
             getOpeningAttributes(estree).push(
@@ -179,15 +181,15 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
                 estree: importsAst as any,
               },
             });
+
+            parent.children[parent.children.indexOf(child)] = {
+              type: 'mdxFlowExpression',
+              value: '',
+              data: { estree },
+            };
           }
         }
       }
-
-      parent.children[parent.children.indexOf(child)] = {
-        type: 'mdxFlowExpression',
-        value: '',
-        data: { estree },
-      };
     });
   };
 };
