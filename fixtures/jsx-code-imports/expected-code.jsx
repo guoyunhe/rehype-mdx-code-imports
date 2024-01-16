@@ -1,4 +1,5 @@
 /*@jsxRuntime automatic @jsxImportSource react*/
+import { Button } from 'antd'
 function _createMdxContent(props) {
   const _components = {
     code: 'code',
@@ -6,15 +7,11 @@ function _createMdxContent(props) {
     ...props.components
   }
   return (
-    <>
-      {
-        <_components.pre onClick={props.onClick}>
-          <_components.code className="language-js">
-            {"console.log('Hello World!')\n"}
-          </_components.code>
-        </_components.pre>
-      }
-    </>
+    <_components.pre>
+      <_components.code className="language-jsx" imports={{ Button }}>
+        {"import { Button } from 'antd'\n\nrender(<Button>Click me!</Button>)\n"}
+      </_components.code>
+    </_components.pre>
   )
 }
 export default function MDXContent(props = {}) {
