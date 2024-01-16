@@ -8,25 +8,21 @@ function _createMdxContent(props) {
     ...props.components,
   };
   return (
-    <>
+    <_components.pre>
       {
-        <_components.pre
+        <_components.code
+          className="language-jsx"
           imports={{
             Button,
             Foobar,
           }}
-          style={{
-            background: 'white',
-          }}
         >
-          <_components.code className="language-jsx">
-            {
-              "import Foobar from '@foo/bar';\nimport { Button } from 'antd';\n\nrender(<Button>Click me!</Button>);\n"
-            }
-          </_components.code>
-        </_components.pre>
+          {
+            "import Foobar from '@foo/bar';\nimport { Button } from 'antd';\n\nrender(<Button>Click me!</Button>);\n"
+          }
+        </_components.code>
       }
-    </>
+    </_components.pre>
   );
 }
 export default function MDXContent(props = {}) {

@@ -1,47 +1,59 @@
-import assert from 'node:assert/strict'
-import { readdir, readFile, writeFile } from 'node:fs/promises'
-import { test } from 'node:test'
-import { fileURLToPath } from 'node:url'
+import assert from 'node:assert/strict';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-import { compile } from '@mdx-js/mdx'
-import { type Root } from 'hast'
-import prettier from 'prettier'
-import { read } from 'to-vfile'
+import { compile } from '@mdx-js/mdx';
+import { type Root } from 'hast';
+import prettier from 'prettier';
+import { read } from 'to-vfile';
+import rehypeMdxCodeProps from 'rehype-mdx-code-props';
 
-import rehypeMdxCodeImports from '.'
+import rehypeMdxCodeImports from '.';
 
-const fixturesDir = new URL('../fixtures/', import.meta.url)
+const fixturesDir = new URL('../fixtures/', import.meta.url);
 
 for (const name of await readdir(fixturesDir)) {
   const testFixture = async (tagName: 'code' | 'pre'): Promise<void> => {
-    const path = new URL(`${name}/`, fixturesDir)
-    const input = await read(new URL('input.md', path))
-    const expected = new URL(`expected-${tagName}.jsx`, path)
-    const filepath = fileURLToPath(expected)
-    const prettierConfig = await prettier.resolveConfig(filepath, { editorconfig: true })
+    const path = new URL(`${name}/`, fixturesDir);
+    const input = await read(new URL('input.md', path));
+    const expected = new URL(`expected-${tagName}.jsx`, path);
+    const filepath = fileURLToPath(expected);
+    const prettierConfig = await prettier.resolveConfig(filepath, {
+      editorconfig: true,
+    });
 
     const result = await compile(input, {
       jsx: true,
-      rehypePlugins: [[rehypeMdxCodeImports, { tagName }]]
-    })
-    const formatted = await prettier.format(String(result), { ...prettierConfig, filepath })
+      rehypePlugins: [
+        [rehypeMdxCodeProps, { tagName }],
+        [rehypeMdxCodeImports, { tagName }],
+      ],
+    });
+    const formatted = await prettier.format(String(result), {
+      ...prettierConfig,
+      filepath,
+    });
     if (process.argv.includes('update')) {
-      await writeFile(expected, formatted)
+      await writeFile(expected, formatted);
     }
-    assert.equal(String(formatted), await readFile(expected, 'utf8'))
-  }
+    assert.equal(String(formatted), await readFile(expected, 'utf8'));
+  };
 
-  test(`${name} code`, () => testFixture('code'))
+  test(`${name} code`, () => testFixture('code'));
 
-  test(`${name} pre`, () => testFixture('pre'))
+  test(`${name} pre`, () => testFixture('pre'));
 }
 
 test('invalid tagName', () => {
   assert.throws(
-    () => compile('', { rehypePlugins: [[rehypeMdxCodeImports, { tagName: 'invalid' }]] }),
-    new Error("Expected tagName to be 'code' or 'pre', got: invalid")
-  )
-})
+    () =>
+      compile('', {
+        rehypePlugins: [[rehypeMdxCodeImports, { tagName: 'invalid' }]],
+      }),
+    new Error("Expected tagName to be 'code' or 'pre', got: invalid"),
+  );
+});
 
 test('code without parent', async () => {
   const { value } = await compile('', {
@@ -52,12 +64,12 @@ test('code without parent', async () => {
           type: 'element',
           tagName: 'code',
           data: { meta: 'meta' },
-          children: []
-        })
+          children: [],
+        });
       },
-      rehypeMdxCodeImports
-    ]
-  })
+      rehypeMdxCodeImports,
+    ],
+  });
 
   assert.equal(
     value,
@@ -72,9 +84,9 @@ test('code without parent', async () => {
       'export default function MDXContent(props = {}) {\n' +
       '  const {wrapper: MDXLayout} = props.components || ({});\n' +
       '  return MDXLayout ? <MDXLayout {...props}><_createMdxContent {...props} /></MDXLayout> : _createMdxContent(props);\n' +
-      '}\n'
-  )
-})
+      '}\n',
+  );
+});
 
 test('code with non-pre parent', async () => {
   const { value } = await compile('', {
@@ -91,14 +103,14 @@ test('code with non-pre parent', async () => {
               tagName: 'code',
               properties: {},
               data: { meta: 'meta' },
-              children: []
-            }
-          ]
-        })
+              children: [],
+            },
+          ],
+        });
       },
-      rehypeMdxCodeImports
-    ]
-  })
+      rehypeMdxCodeImports,
+    ],
+  });
 
   assert.equal(
     value,
@@ -114,9 +126,9 @@ test('code with non-pre parent', async () => {
       'export default function MDXContent(props = {}) {\n' +
       '  const {wrapper: MDXLayout} = props.components || ({});\n' +
       '  return MDXLayout ? <MDXLayout {...props}><_createMdxContent {...props} /></MDXLayout> : _createMdxContent(props);\n' +
-      '}\n'
-  )
-})
+      '}\n',
+  );
+});
 
 test('code with pre parent and siblings', async () => {
   const { value } = await compile('', {
@@ -133,20 +145,20 @@ test('code with pre parent and siblings', async () => {
               tagName: 'code',
               properties: {},
               data: { meta: 'meta' },
-              children: []
+              children: [],
             },
             {
               type: 'element',
               tagName: 'code',
               properties: {},
-              children: []
-            }
-          ]
-        })
+              children: [],
+            },
+          ],
+        });
       },
-      rehypeMdxCodeImports
-    ]
-  })
+      rehypeMdxCodeImports,
+    ],
+  });
 
   assert.equal(
     value,
@@ -162,6 +174,6 @@ test('code with pre parent and siblings', async () => {
       'export default function MDXContent(props = {}) {\n' +
       '  const {wrapper: MDXLayout} = props.components || ({});\n' +
       '  return MDXLayout ? <MDXLayout {...props}><_createMdxContent {...props} /></MDXLayout> : _createMdxContent(props);\n' +
-      '}\n'
-  )
-})
+      '}\n',
+  );
+});

@@ -46,6 +46,7 @@
     "@types/jest": "^29.0.0",
     "@types/node": "^16.0.0",
     "prettier": "^3.2.2",
+    "rehype-mdx-code-props": "^2.0.0",
     "to-vfile": "^8.0.0",
     "tsx": "^4.7.0",
     "typescript": "^5.0.0"

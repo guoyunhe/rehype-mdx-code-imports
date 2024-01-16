@@ -1,4 +1,4 @@
-```jsx style={{ background: 'white' }}
+```jsx
 import Foobar from '@foo/bar';
 import { Button } from 'antd';
 
