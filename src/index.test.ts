@@ -26,8 +26,8 @@ for (const name of await readdir(fixturesDir)) {
     const result = await compile(input, {
       jsx: true,
       rehypePlugins: [
-        [rehypeMdxCodeProps, { tagName }],
         [rehypeMdxCodeImports, { tagName }],
+        [rehypeMdxCodeProps, { tagName }],
       ],
     });
     const formatted = await prettier.format(String(result), {

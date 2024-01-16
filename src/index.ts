@@ -1,14 +1,7 @@
 import { Parser } from 'acorn';
 import jsx from 'acorn-jsx';
-import {
-  type ExpressionStatement,
-  type JSXAttribute,
-  type JSXElement,
-  type JSXSpreadAttribute,
-  type Program,
-} from 'estree-jsx';
+import { type Program } from 'estree-jsx';
 import type { Root, Text } from 'hast';
-import { toEstree } from 'hast-util-to-estree';
 import { type Plugin } from 'unified';
 import { visitParents } from 'unist-util-visit-parents';
 
@@ -26,23 +19,7 @@ declare module 'hast' {
   }
 }
 
-type JSXAttributes = (JSXAttribute | JSXSpreadAttribute)[];
-
 const parser = Parser.extend(jsx());
-
-/**
- * Get the JSX attributes for an estree program containing just a single JSX element.
- *
- * @param program
- *   The estree program
- * @returns
- *   The JSX attributes of the JSX element.
- */
-function getOpeningAttributes(program: Program): JSXAttributes {
-  const { expression } = program.body[0] as ExpressionStatement;
-  const { openingElement } = expression as JSXElement;
-  return openingElement.attributes;
-}
 
 function getImportedNamesFromProgram(
   program: Program,
@@ -72,21 +49,6 @@ function getImportedNamesFromRoot(root: Root): string[] {
   return Array.from(new Set(names));
 }
 
-/**
- * Convert code meta to JSX elements.
- *
- * @param meta
- *   The meta to conert
- * @returns
- *   A list of MDX JSX attributes.
- */
-function parseMeta(meta: string): JSXAttributes {
-  const program = parser.parse(`<c ${meta} />`, {
-    ecmaVersion: 'latest',
-  }) as Program;
-  return getOpeningAttributes(program);
-}
-
 export interface RehypeMdxCodeImportsOptions {
   /**
    * The tag name to add the attributes to.
@@ -112,8 +74,7 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
         return;
       }
 
-      let child = node;
-      let parent = ancestors.at(-1)!;
+      const parent = ancestors.at(-1)!;
 
       if (tagName === 'pre') {
         if (parent.type !== 'element') {
@@ -127,12 +88,11 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
         if (parent.children.length !== 1) {
           return;
         }
-
-        child = parent;
-        parent = ancestors.at(-2)!;
       }
 
-      const estree = toEstree(child);
+      if (node.data?.meta?.includes(' imports={{')) {
+        return;
+      }
 
       const className =
         node.properties?.className && Array.isArray(node.properties.className)
@@ -140,6 +100,7 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
               (cls) => typeof cls === 'string' && cls.startsWith('language'),
             )
           : node.properties?.className;
+      console.log('className', className);
 
       // only process jsx and tsx code blocks
       if (className === 'language-jsx' || className === 'language-tsx') {
@@ -164,16 +125,16 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
               existingMembers,
             );
 
-            console.log(importsStr);
+            // append imports meta props to the code (depends on rehype-mdx-code-props)
+            if (!node.data) {
+              node.data = {};
+            }
+            if (!node.data.meta) {
+              node.data.meta = '';
+            }
+            node.data.meta += ` imports={{ ${importsMembers.sort().join(', ')} }}`;
 
-            // remove duplicated members that is already in root ast
-
-            getOpeningAttributes(estree).push(
-              ...parseMeta(
-                `imports={{ ${Array.from(importsMembers).sort().join(', ')} }}`,
-              ),
-            );
-
+            // insert import statements to MDX root
             ast.children.unshift({
               type: 'mdxjsEsm',
               value: '',
@@ -181,12 +142,6 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
                 estree: importsAst as any,
               },
             });
-
-            parent.children[parent.children.indexOf(child)] = {
-              type: 'mdxFlowExpression',
-              value: '',
-              data: { estree },
-            };
           }
         }
       }

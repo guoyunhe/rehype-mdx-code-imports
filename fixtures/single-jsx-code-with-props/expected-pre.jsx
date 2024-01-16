@@ -11,12 +11,12 @@ function _createMdxContent(props) {
     <>
       {
         <_components.pre
+          style={{
+            background: 'white',
+          }}
           imports={{
             Button,
             Foobar,
-          }}
-          style={{
-            background: 'white',
           }}
         >
           <_components.code className="language-jsx">
