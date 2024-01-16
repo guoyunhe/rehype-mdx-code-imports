@@ -1,5 +1,6 @@
 ```jsx
-import { Button } from 'antd'
+import Foobar from '@foo/bar';
+import { Button } from 'antd';
 
-render(<Button>Click me!</Button>)
+render(<Button>Click me!</Button>);
 ```

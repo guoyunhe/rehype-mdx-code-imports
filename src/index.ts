@@ -1,16 +1,18 @@
-import { Parser } from 'acorn'
-import jsx from 'acorn-jsx'
+import { Parser } from 'acorn';
+import jsx from 'acorn-jsx';
 import {
   type ExpressionStatement,
   type JSXAttribute,
   type JSXElement,
   type JSXSpreadAttribute,
-  type Program
-} from 'estree-jsx'
-import { type Root } from 'hast'
-import { toEstree } from 'hast-util-to-estree'
-import { type Plugin } from 'unified'
-import { visitParents } from 'unist-util-visit-parents'
+  type Program,
+} from 'estree-jsx';
+import type { Root, Text } from 'hast';
+import { toEstree } from 'hast-util-to-estree';
+import { type Plugin } from 'unified';
+import { visitParents } from 'unist-util-visit-parents';
+
+const importRegex = /import[\w_,{}$\s]+from\s['"]([.@\w/_-]+)['"];?/gm;
 
 /**
  * @internal
@@ -20,13 +22,13 @@ declare module 'hast' {
     /**
      * Code meta defined by the mdast.
      */
-    meta?: string
+    meta?: string;
   }
 }
 
-type JSXAttributes = (JSXAttribute | JSXSpreadAttribute)[]
+type JSXAttributes = (JSXAttribute | JSXSpreadAttribute)[];
 
-const parser = Parser.extend(jsx())
+const parser = Parser.extend(jsx());
 
 /**
  * Get the JSX attributes for an estree program containing just a single JSX element.
@@ -37,9 +39,9 @@ const parser = Parser.extend(jsx())
  *   The JSX attributes of the JSX element.
  */
 function getOpeningAttributes(program: Program): JSXAttributes {
-  const { expression } = program.body[0] as ExpressionStatement
-  const { openingElement } = expression as JSXElement
-  return openingElement.attributes
+  const { expression } = program.body[0] as ExpressionStatement;
+  const { openingElement } = expression as JSXElement;
+  return openingElement.attributes;
 }
 
 /**
@@ -52,9 +54,9 @@ function getOpeningAttributes(program: Program): JSXAttributes {
  */
 function parseMeta(meta: string): JSXAttributes {
   const program = parser.parse(`<c ${meta} />`, {
-    ecmaVersion: 'latest'
-  }) as Program
-  return getOpeningAttributes(program)
+    ecmaVersion: 'latest',
+  }) as Program;
+  return getOpeningAttributes(program);
 }
 
 export interface RehypeMdxCodeImportsOptions {
@@ -63,75 +65,106 @@ export interface RehypeMdxCodeImportsOptions {
    *
    * @default 'pre'
    */
-  tagName?: 'code' | 'pre'
+  tagName?: 'code' | 'pre';
 }
 
 /**
  * An MDX rehype plugin for extracting imports from code into JSX props. Useful for rendering React Live demo.
  */
 const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
-  tagName = 'pre'
+  tagName = 'pre',
 } = {}) => {
   if (tagName !== 'code' && tagName !== 'pre') {
-    throw new Error(`Expected tagName to be 'code' or 'pre', got: ${tagName}`)
+    throw new Error(`Expected tagName to be 'code' or 'pre', got: ${tagName}`);
   }
 
   return (ast) => {
     visitParents(ast, 'element', (node, ancestors) => {
       if (node.tagName !== 'code') {
-        return
+        return;
       }
 
-      const meta = node.data?.meta
-      if (typeof meta !== 'string') {
-        return
-      }
-
-      if (!meta) {
-        return
-      }
-
-      let child = node
-      let parent = ancestors.at(-1)!
+      let child = node;
+      let parent = ancestors.at(-1)!;
 
       if (tagName === 'pre') {
         if (parent.type !== 'element') {
-          return
+          return;
         }
 
         if (parent.tagName !== 'pre') {
-          return
+          return;
         }
 
         if (parent.children.length !== 1) {
-          return
+          return;
         }
 
-        child = parent
-        parent = ancestors.at(-2)!
+        child = parent;
+        parent = ancestors.at(-2)!;
       }
 
-      const estree = toEstree(child)
-      getOpeningAttributes(estree).push(...parseMeta(meta))
+      const estree = toEstree(child);
 
       const className =
-        child.properties.className && Array.isArray(child.properties.className)
-          ? child.properties.className.find(
-              (cls) => typeof cls === 'string' && cls.startsWith('language')
+        node.properties?.className && Array.isArray(node.properties.className)
+          ? node.properties?.className.find(
+              (cls) => typeof cls === 'string' && cls.startsWith('language'),
             )
-          : child.properties.className
+          : node.properties?.className;
 
+      // only process jsx and tsx code blocks
       if (className === 'language-jsx' || className === 'language-tsx') {
-        getOpeningAttributes(estree).push(...parseMeta(`imports={{ foobar, foo }}`))
+        const sourceCode = (
+          node.children?.find((item) => item.type === 'text') as Text
+        )?.value;
+        // ensure source code is not empty
+        if (sourceCode?.trim()) {
+          const matches = sourceCode.matchAll(importRegex);
+          if (matches) {
+            const importsStr = Array.from(matches)
+              .map((item) => item[0])
+              .join('\n');
+            const importsAst = parser.parse(importsStr, {
+              ecmaVersion: 'latest',
+              sourceType: 'module',
+            });
+
+            const importsMembers = new Set<string>();
+
+            importsAst.body.forEach((declaration) => {
+              if (declaration.type === 'ImportDeclaration') {
+                declaration.specifiers.forEach((specifier) => {
+                  if (specifier.local.name) {
+                    importsMembers.add(specifier.local.name);
+                  }
+                });
+              }
+            });
+
+            getOpeningAttributes(estree).push(
+              ...parseMeta(
+                `imports={{ ${Array.from(importsMembers).sort().join(', ')} }}`,
+              ),
+            );
+            ast.children.unshift({
+              type: 'mdxjsEsm',
+              value: importsStr,
+              data: {
+                estree: importsAst as any,
+              },
+            });
+          }
+        }
       }
 
       parent.children[parent.children.indexOf(child)] = {
         type: 'mdxFlowExpression',
         value: '',
-        data: { estree }
-      }
-    })
-  }
-}
+        data: { estree },
+      };
+    });
+  };
+};
 
-export default rehypeMdxCodeImports
+export default rehypeMdxCodeImports;

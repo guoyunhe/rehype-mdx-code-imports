@@ -33,13 +33,6 @@
     "test": "tsx src/index.test.ts",
     "watch": "node-scripts watch"
   },
-  "prettier": {
-    "printWidth": 100,
-    "singleQuote": true,
-    "proseWrap": "always",
-    "semi": false,
-    "trailingComma": "none"
-  },
   "eslintConfig": {
     "extends": "@guoyunhe/node-scripts"
   },
