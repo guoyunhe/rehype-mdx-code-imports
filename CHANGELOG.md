@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0 - 2024-01-17
+
+- Added `languages` option
+
 ## 0.2.0 - 2024-01-16
 
 - Fixed conflicts with `rehype-mdx-code-props` plugin

@@ -56,6 +56,12 @@ export interface RehypeMdxCodeImportsOptions {
    * @default 'pre'
    */
   tagName?: 'code' | 'pre';
+  /**
+   * What languages to parse imports.
+   *
+   * @default ['jsx','tsx']
+   */
+  languages?: string[];
 }
 
 /**
@@ -63,6 +69,7 @@ export interface RehypeMdxCodeImportsOptions {
  */
 const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
   tagName = 'pre',
+  languages = ['jsx', 'tsx'],
 } = {}) => {
   if (tagName !== 'code' && tagName !== 'pre') {
     throw new Error(`Expected tagName to be 'code' or 'pre', got: ${tagName}`);
@@ -96,13 +103,14 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
 
       const className =
         node.properties?.className && Array.isArray(node.properties.className)
-          ? node.properties?.className.find(
+          ? (node.properties?.className.find(
               (cls) => typeof cls === 'string' && cls.startsWith('language-'),
-            )
-          : node.properties?.className;
+            ) as string)
+          : (node.properties?.className as string);
+      const language = className?.substring(9);
 
       // only process jsx and tsx code blocks
-      if (className === 'language-jsx' || className === 'language-tsx') {
+      if (languages.includes(language)) {
         const sourceCode = (
           node.children?.find((item) => item.type === 'text') as Text
         )?.value;

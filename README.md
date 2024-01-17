@@ -1,6 +1,6 @@
 # rehype-mdx-code-imports
 
-An MDX rehype plugin for extracting imports from code into JSX props. Useful for rendering React Live demo.
+An MDX rehype plugin for extracting imports from code into JSX props. Useful for rendering [React Live](https://github.com/FormidableLabs/react-live) demo.
 
 This plugin is mostly inspired by [rehype-mdx-code-props](https://github.com/remcohaszing/rehype-mdx-code-props).
 And it is recommended to these two plugin together to achieve better result.
@@ -142,3 +142,34 @@ export default function App() {
   );
 }
 ```
+
+## Options
+
+### `tagName: 'pre' | 'code`
+
+Default: `'pre'`
+
+Markdown code block will be converted to a `code` wrapped by a `pre`. You can choose which one to
+attach `imports={{ ... }}` property.
+
+By default, it is added to `pre`:
+
+```jsx
+<pre imports={{ ... }}>
+  <code className="language-jsx">...</code>
+</pre>
+```
+
+If you want to attach to `code`:
+
+```jsx
+<pre>
+  <code className="language-jsx" imports={{ ... }}>...</code>
+</pre>
+```
+
+### `languages: string[]`
+
+Default: `['jsx', 'tsx']`
+
+What languages to parse imports. Since this plugin is mostly used with [React Live](https://github.com/FormidableLabs/react-live), the default language support is `jsx` and `tsx`. In theory you can enable `js` and `ts` if needed, but is it not tested.
