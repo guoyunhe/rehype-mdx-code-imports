@@ -1,8 +1,9 @@
 # Changelog
 
-## 0.3.1 - 2024-02-07
+## 0.4.0 - 2024-02-07
 
 - Fixed exception when code block contains duplicated imported names
+- Added `static` code meta support to disable import parsing
 
 ## 0.3.0 - 2024-01-17
 
