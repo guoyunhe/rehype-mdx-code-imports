@@ -97,7 +97,15 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
         }
       }
 
-      if (node.data?.meta?.includes(' imports={{')) {
+      const meta = ' ' + node.data?.meta + ' ';
+
+      // has been processed, skip
+      if (meta.includes(' imports={{')) {
+        return;
+      }
+
+      // static code block, skip
+      if (meta.includes(' static ')) {
         return;
       }
 
