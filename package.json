@@ -1,6 +1,6 @@
 {
   "name": "rehype-mdx-code-imports",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "An MDX rehype plugin for extracting imports from code into JSX props. Useful for rendering React Live demo.",
   "keywords": [],
   "homepage": "https://github.com/guoyunhe/rehype-mdx-code-imports#readme",
