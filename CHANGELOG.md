@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 - 2024-02-07
+
+- Fixed exception when code block contains duplicated imported names
+
 ## 0.3.0 - 2024-01-17
 
 - Added `languages` option
