@@ -23,7 +23,7 @@ const parser = Parser.extend(jsx());
 
 function getImportedNamesFromProgram(
   program: Program,
-  removeList?: string[],
+  removeList: string[] = [],
 ): string[] {
   const names = new Set<string>();
   program.body.forEach((declaration) => {
@@ -32,7 +32,7 @@ function getImportedNamesFromProgram(
         if (specifier.local.name) {
           names.add(specifier.local.name);
         }
-        return !removeList?.includes(specifier.local.name);
+        return !removeList.includes(specifier.local.name);
       });
     }
   });
@@ -118,20 +118,31 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
         if (sourceCode?.trim()) {
           const matches = sourceCode.matchAll(importRegex);
           if (matches) {
-            const importsStr = Array.from(matches)
-              .map((item) => item[0])
-              .join('\n');
-            const importsAst = parser.parse(importsStr, {
-              ecmaVersion: 'latest',
-              sourceType: 'module',
+            let importsMembers: string[] = [];
+            const importStrs = Array.from(matches).map((item) => item[0]);
+            importStrs.reverse().forEach((importStr) => {
+              const importAst = parser.parse(importStr, {
+                ecmaVersion: 'latest',
+                sourceType: 'module',
+              });
+
+              const existingMembers = getImportedNamesFromRoot(ast);
+              importsMembers = importsMembers.concat(
+                getImportedNamesFromProgram(
+                  importAst as Program,
+                  existingMembers,
+                ),
+              );
+
+              // insert import statements to MDX root
+              ast.children.unshift({
+                type: 'mdxjsEsm',
+                value: '',
+                data: {
+                  estree: importAst as any,
+                },
+              });
             });
-
-            const existingMembers = getImportedNamesFromRoot(ast);
-            const importsMembers = getImportedNamesFromProgram(
-              importsAst as Program,
-              existingMembers,
-            );
-
             // append imports meta props to the code (depends on rehype-mdx-code-props)
             if (!node.data) {
               node.data = {};
@@ -139,16 +150,7 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
             if (!node.data.meta) {
               node.data.meta = '';
             }
-            node.data.meta += ` imports={{ ${importsMembers.sort().join(', ')} }}`;
-
-            // insert import statements to MDX root
-            ast.children.unshift({
-              type: 'mdxjsEsm',
-              value: '',
-              data: {
-                estree: importsAst as any,
-              },
-            });
+            node.data.meta += ` imports={{ ${Array.from(new Set(importsMembers)).sort().join(', ')} }}`;
           }
         }
       }
