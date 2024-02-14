@@ -73,7 +73,8 @@ test('code without parent', async () => {
 
   assert.equal(
     value,
-    '/*@jsxRuntime automatic @jsxImportSource react*/\n' +
+    '/*@jsxRuntime automatic*/\n' +
+      '/*@jsxImportSource react*/\n' +
       'function _createMdxContent(props) {\n' +
       '  const _components = {\n' +
       '    code: "code",\n' +
@@ -114,7 +115,8 @@ test('code with non-pre parent', async () => {
 
   assert.equal(
     value,
-    '/*@jsxRuntime automatic @jsxImportSource react*/\n' +
+    '/*@jsxRuntime automatic*/\n' +
+      '/*@jsxImportSource react*/\n' +
       'function _createMdxContent(props) {\n' +
       '  const _components = {\n' +
       '    code: "code",\n' +
@@ -162,7 +164,8 @@ test('code with pre parent and siblings', async () => {
 
   assert.equal(
     value,
-    '/*@jsxRuntime automatic @jsxImportSource react*/\n' +
+    '/*@jsxRuntime automatic*/\n' +
+      '/*@jsxImportSource react*/\n' +
       'function _createMdxContent(props) {\n' +
       '  const _components = {\n' +
       '    code: "code",\n' +

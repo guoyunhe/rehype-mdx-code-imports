@@ -4,6 +4,7 @@ import { type Program } from 'estree-jsx';
 import type { Root, Text } from 'hast';
 import { type Plugin } from 'unified';
 import { visitParents } from 'unist-util-visit-parents';
+import { snakeCase } from 'change-case';
 
 const importRegex = /import[\w_,{}$\s]+from\s['"]([.@\w/_-]+)['"];?/gm;
 
@@ -27,9 +28,22 @@ function getImportedNamesFromProgram(
 ): string[] {
   const names = new Set<string>();
   program.body.forEach((declaration) => {
-    if (declaration.type === 'ImportDeclaration') {
+    if (
+      declaration.type === 'ImportDeclaration' &&
+      typeof declaration.source.value === 'string'
+    ) {
       declaration.specifiers = declaration.specifiers.filter((specifier) => {
         if (specifier.local.name) {
+          // append import source to reduce naming conflicts between code blocks
+          if (!specifier.local.name.includes('$$')) {
+            specifier.local = {
+              type: 'Identifier',
+              name:
+                specifier.local.name +
+                '$$' +
+                snakeCase(declaration.source.value as string),
+            };
+          }
           names.add(specifier.local.name);
         }
         return !removeList.includes(specifier.local.name);
@@ -158,7 +172,10 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
             if (!node.data.meta) {
               node.data.meta = '';
             }
-            node.data.meta += ` imports={{ ${Array.from(new Set(importsMembers)).sort().join(', ')} }}`;
+            node.data.meta += ` imports={{ ${Array.from(new Set(importsMembers))
+              .sort()
+              .map((item) => `${item.split('$$')[0]}: ${item}`)
+              .join(', ')} }}`;
           }
         }
       }

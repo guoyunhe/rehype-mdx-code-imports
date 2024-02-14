@@ -1,6 +1,7 @@
-/*@jsxRuntime automatic @jsxImportSource react*/
-import Foobar from '@foo/bar';
-import { Button } from 'antd';
+/*@jsxRuntime automatic*/
+/*@jsxImportSource react*/
+import Foobar$$foo_bar from '@foo/bar';
+import { Button as Button$$antd } from 'antd';
 function _createMdxContent(props) {
   const _components = {
     code: 'code',
@@ -16,8 +17,8 @@ function _createMdxContent(props) {
             background: 'white',
           }}
           imports={{
-            Button,
-            Foobar,
+            Button: Button$$antd,
+            Foobar: Foobar$$foo_bar,
           }}
         >
           {

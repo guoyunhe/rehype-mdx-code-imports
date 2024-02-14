@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0 - 2024-02-14
+
+- Fixed name override when code blocks contains same local name imported from different sources
+
 ## 0.4.0 - 2024-02-07
 
 - Fixed exception when code block contains duplicated imported names

@@ -21,7 +21,8 @@ render(<Button>Click me!</Button>);
 into the following MDX component:
 
 ```jsx
-/*@jsxRuntime automatic @jsxImportSource react*/
+/*@jsxRuntime automatic*/
+/*@jsxImportSource react*/
 import Foobar from '@foo/bar';
 import { Button } from 'antd';
 function _createMdxContent(props) {

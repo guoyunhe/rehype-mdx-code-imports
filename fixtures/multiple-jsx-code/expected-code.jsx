@@ -1,7 +1,8 @@
-/*@jsxRuntime automatic @jsxImportSource react*/
-import { Card } from 'antd';
-import Foobar from '@foo/bar';
-import { Button } from 'antd';
+/*@jsxRuntime automatic*/
+/*@jsxImportSource react*/
+import { Card as Card$$antd } from 'antd';
+import Foobar$$foo_bar from '@foo/bar';
+import { Button as Button$$antd } from 'antd';
 function _createMdxContent(props) {
   const _components = {
     code: 'code',
@@ -15,8 +16,8 @@ function _createMdxContent(props) {
           <_components.code
             className="language-jsx"
             imports={{
-              Button,
-              Foobar,
+              Button: Button$$antd,
+              Foobar: Foobar$$foo_bar,
             }}
           >
             {
@@ -31,8 +32,8 @@ function _createMdxContent(props) {
           <_components.code
             className="language-jsx"
             imports={{
-              Button,
-              Card,
+              Button: Button$$antd,
+              Card: Card$$antd,
             }}
           >
             {
