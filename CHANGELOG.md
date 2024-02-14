@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2 - 2024-02-14
+
+- Fixed build
+
 ## 0.4.1 - 2024-02-14
 
 - Fixed name override when code blocks contains same local name imported from different sources
