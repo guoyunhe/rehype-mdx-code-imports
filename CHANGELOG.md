@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.3 - 2024-03-01
+
+- Fixed conflicts with manual imports and imports by other plugins
+
 ## 0.4.2 - 2024-02-14
 
 - Fixed build
