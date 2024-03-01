@@ -22,7 +22,7 @@ declare module 'hast' {
 
 const parser = Parser.extend(jsx());
 
-function getImportedNamesFromProgram(
+function convertImportedNamesFromProgram(
   program: Program,
   removeList: string[] = [],
 ): string[] {
@@ -54,13 +54,25 @@ function getImportedNamesFromProgram(
 }
 
 function getImportedNamesFromRoot(root: Root): string[] {
-  let names: string[] = [];
+  const names = new Set<string>();
   root.children.forEach((child) => {
     if (child.type === 'mdxjsEsm' && child.data?.estree) {
-      names = [...names, ...getImportedNamesFromProgram(child.data?.estree)];
+      const program = child.data?.estree;
+      program.body.forEach((declaration) => {
+        if (
+          declaration.type === 'ImportDeclaration' &&
+          typeof declaration.source.value === 'string'
+        ) {
+          declaration.specifiers.forEach((specifier) => {
+            if (specifier.local.name) {
+              names.add(specifier.local.name);
+            }
+          });
+        }
+      });
     }
   });
-  return Array.from(new Set(names));
+  return Array.from(names);
 }
 
 export interface RehypeMdxCodeImportsOptions {
@@ -150,7 +162,7 @@ const rehypeMdxCodeImports: Plugin<[RehypeMdxCodeImportsOptions?], Root> = ({
 
               const existingMembers = getImportedNamesFromRoot(ast);
               importsMembers = importsMembers.concat(
-                getImportedNamesFromProgram(
+                convertImportedNamesFromProgram(
                   importAst as Program,
                   existingMembers,
                 ),
